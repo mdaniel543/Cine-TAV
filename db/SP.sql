@@ -48,24 +48,28 @@ DELIMITER $$
 CREATE PROCEDURE `CrearFuncion`(IN Param_idPelicula INT, IN Param_idTipo INT, IN Param_idSala INT, IN Param_idCartelera INT, 
 IN Param_HoraInicio VARCHAR(20), IN Param_HoraFin VARCHAR(20), IN Param_PrecioAsiento FLOAT) 
 BEGIN 
-    DECLARE Existe INT DEFAULT 0;
+    DECLARE Existe INT;
 
     SELECT COUNT(*) INTO Existe FROM Funcion f
     WHERE f.Pelicula_idPelicula = Param_idPelicula 
     AND f.Tipo_idTipo = Param_idTipo 
     AND f.Sala_idSala = Param_idSala 
     AND f.Cartelera_idCartelera = Param_idCartelera 
-    AND f.HoraInicio = Param_HoraInicio 
-    AND f.HoraFin = Param_HoraFin;
+    AND DATE_FORMAT(f.HoraInicio, '%H:%i:%s') = Param_HoraInicio
+    AND DATE_FORMAT(f.HoraFin, '%H:%i:%s') = Param_HoraFin
+    AND f.PrecioAsiento = Param_PrecioAsiento;
 
-    IF Existe = 1 THEN
-       SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Ya existe una funcion con los mismos datos';
-    ELSE
-        INSERT INTO Funcion(Pelicula_idPelicula, Tipo_idTipo, Sala_idSala, Cartelera_idCartelera, HoraInicio, HoraFin, PrecioAsiento) 
+    IF (Existe = 0) THEN
+        INSERT INTO Funcion(Pelicula_idPelicula, Tipo_idTipo, Sala_idSala, Cartelera_idCartelera, HoraInicio, HoraFin, PrecioAsiento)
         VALUES(Param_idPelicula, Param_idTipo, Param_idSala, Param_idCartelera, Param_HoraInicio, Param_HoraFin, Param_PrecioAsiento);
 
         COMMIT;
+    ELSE
+       SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Ya existe una funcion con los mismos datos';
+        
     END IF;
+
+    SELECT LAST_INSERT_ID() INTO @idFuncion;
 
 END$$
 
