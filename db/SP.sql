@@ -134,7 +134,17 @@ BEGIN
     DECLARE i INT DEFAULT 1;
     DECLARE idAsiento INT DEFAULT 0;
     DECLARE Existe INT DEFAULT 0;
+    DECLARE disponible INT DEFAULT 0;
     DECLARE asientos VARCHAR(1000) DEFAULT Asientos;
+
+    -- verificar si la funcion dejo de estar disponible por su hora de fin
+    SELECT COUNT(*) INTO disponible FROM Funcion f
+    WHERE f.idFuncion = idFuncion
+    AND f.HoraFin < NOW();
+
+    IF (disponible > 0) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La funcion ya no esta disponible';
+    END IF;
 
     INSERT INTO Venta(CorreoCliente, Total, Funcion_idFuncion) VALUES(Param_CorreoCliente, Param_Total, idFuncion);
 
